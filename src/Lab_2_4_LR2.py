@@ -64,11 +64,12 @@ class LinearRegressor:
         Returns:
             None: Modifies the model's coefficients and intercept in-place.
         """
-        # Replace this code with the code you did in the previous laboratory session
-
-        # Store the intercept and the coefficients of the model
-        self.intercept = None
-        self.coefficients = None
+        X_design = np.hstack([np.ones((X.shape[0], 1)), X])
+    
+        theta = np.linalg.inv(X_design.T.dot(X_design)).dot(X_design.T).dot(y)
+        
+        self.intercept = theta[0]
+        self.coefficients = theta[1:]
 
     def fit_gradient_descent(self, X, y, learning_rate=0.01, iterations=1000):
         """
@@ -91,19 +92,18 @@ class LinearRegressor:
         )  # Small random numbers
         self.intercept = np.random.rand() * 0.01
 
-        # Implement gradient descent (TODO)
+        # Implement gradient descent
         for epoch in range(iterations):
-            predictions = None
+            predictions = X.dot(self.coefficients) + self.intercept
             error = predictions - y
 
             # TODO: Write the gradient values and the updates for the paramenters
-            gradient = None
-            self.intercept -= None
-            self.coefficients -= None
+            gradient = np.gradient(X)
+            self.intercept -= learning_rate*gradient[0]
+            self.coefficients -= learning_rate*gradient[1:]
 
-            # TODO: Calculate and print the loss every 10 epochs
             if epoch % 1000 == 0:
-                mse = None
+                mse = error**2/m
                 print(f"Epoch {epoch}: MSE = {mse}")
 
     def predict(self, X):
@@ -120,13 +120,17 @@ class LinearRegressor:
         Raises:
             ValueError: If the model is not yet fitted.
         """
-
-        # Paste your code from last week
-
         if self.coefficients is None or self.intercept is None:
             raise ValueError("Model is not yet fitted")
-
-        return None
+        
+        if np.ndim(X) == 1:
+            # Predict when X is only one variable
+            X = X.reshape(-1, 1)
+            predictions = X.dot(self.coefficients) + self.intercept
+        else:
+            # Predict when X is more than one variable
+            predictions = X.dot(self.coefficients) + self.intercept
+        return predictions
 
 
 def evaluate_regression(y_true, y_pred):
@@ -140,18 +144,19 @@ def evaluate_regression(y_true, y_pred):
     Returns:
         dict: A dictionary containing the R^2, RMSE, and MAE values.
     """
-
-    # R^2 Score
-    # TODO
-    r_squared = None
+    # R^2
+    # Calculate R^2
+    ss_res = np.sum((y_true - y_pred)**2)
+    ss_tot = np.sum((y_true - np.mean(y_true))**2)
+    r_squared = 1 - ss_res / ss_tot
 
     # Root Mean Squared Error
-    # TODO
-    rmse = None
+    # Calculate RMSE
+    rmse = np.sqrt(np.sum((y_true - y_pred)**2) / len(y_true))
 
     # Mean Absolute Error
-    # TODO
-    mae = None
+    # Calculate MAE
+    mae = np.sum(np.abs(y_true - y_pred)) / len(y_true)
 
     return {"R2": r_squared, "RMSE": rmse, "MAE": mae}
 
